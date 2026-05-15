@@ -9,25 +9,26 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
 public class CivilizationsGUI extends JFrame implements Variables {
     private Civilization civilization;
     private ArrayList<MilitaryUnit> currentEnemyArmy;
     private boolean enemyPending;
     private Timer gameTimer;
+    private Timer countdownTimer;
+    private TimerTask countdownTask;
+    private List<Battle> battleHistory;
     private LeftPanel leftPanel;
     private MiddlePanel middlePanel;
     private RightPanel rightPanel;
     private BottomPanel bottomPanel;
-    private List<Battle> battleHistory = new ArrayList<>();
 
     public CivilizationsGUI() {
         civilization = new Civilization();
         currentEnemyArmy = null;
         enemyPending = false;
         gameTimer = new Timer();
+        battleHistory = new ArrayList<>();
 
-        // Recursos iniciales
         civilization.setFood(50000);
         civilization.setWood(50000);
         civilization.setIron(50000);
@@ -36,7 +37,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
         initUI();
         startTimers();
         setTitle("Civilizations - Gestión de tu Imperio");
-        setSize(1500, 1000);
+        setSize(1200, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -77,6 +78,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
                         appendLog("*** ¡Nueva amenaza enemiga! Usa 'Ver Amenaza' para detalles. ***\n");
                         refreshThreatIndicator(true);
                         refreshAll();
+                        startCountdown(); // Inicia cuenta atrás de 10 segundos
                     }
                 });
             }
@@ -148,6 +150,62 @@ public class CivilizationsGUI extends JFrame implements Variables {
         return 0;
     }
 
+    // Botón para buscar batalla voluntariamente
+    public void forceEnemy() {
+        if (!enemyPending) {
+            currentEnemyArmy = createEnemyArmy();
+            enemyPending = true;
+            appendLog("*** ¡Has buscado batalla! Amenaza enemiga detectada. ***\n");
+            refreshThreatIndicator(true);
+            refreshAll();
+            startCountdown();
+        } else {
+            appendLog("Ya hay una amenaza activa. No puedes buscar otra.\n");
+            JOptionPane.showMessageDialog(this, "Ya hay una amenaza enemiga activa.", "Aviso", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void startCountdown() {
+        cancelCountdown(); // Asegurar que no haya otro corriendo
+        final int[] timeLeft = {10}; // 10 segundos
+        countdownTask = new TimerTask() {
+            @Override
+            public void run() {
+                SwingUtilities.invokeLater(() -> {
+                    if (enemyPending) {
+                        middlePanel.setCountdown(timeLeft[0]);
+                        if (timeLeft[0] <= 0) {
+                            // Cuenta atrás terminada, iniciar batalla
+                            if (enemyPending && currentEnemyArmy != null) {
+                                startBattle();
+                            }
+                            cancelCountdown();
+                        } else {
+                            timeLeft[0]--;
+                        }
+                    } else {
+                        cancelCountdown();
+                    }
+                });
+            }
+        };
+        countdownTimer = new Timer();
+        countdownTimer.scheduleAtFixedRate(countdownTask, 0, 1000);
+    }
+
+    private void cancelCountdown() {
+        if (countdownTask != null) {
+            countdownTask.cancel();
+            countdownTask = null;
+        }
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
+            countdownTimer.purge();
+            countdownTimer = null;
+        }
+        middlePanel.clearCountdown();
+    }
+
     public void viewThreat() {
         if (!enemyPending || currentEnemyArmy == null) {
             JOptionPane.showMessageDialog(this, "No hay ninguna amenaza enemiga en este momento.", "Amenaza", JOptionPane.INFORMATION_MESSAGE);
@@ -158,26 +216,39 @@ public class CivilizationsGUI extends JFrame implements Variables {
 
     public void startBattle() {
         if (!enemyPending || currentEnemyArmy == null) {
+            JOptionPane.showMessageDialog(this, "No hay enemigo para batallar.", "Batalla", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        // Verificar si el jugador tiene unidades
+        int totalUnits = 0;
+        for (ArrayList<MilitaryUnit> list : civilization.getArmy()) {
+            totalUnits += list.size();
+        }
+        if (totalUnits == 0) {
+            JOptionPane.showMessageDialog(this, "No tienes ninguna unidad para combatir. Construye algunas primero.", "Sin ejército", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        // Resto del código...
+        cancelCountdown(); // Detener cuenta atrás si está activa
+        if (!enemyPending || currentEnemyArmy == null) {
             JOptionPane.showMessageDialog(this, "No hay enemigo para batallar. Espera a que llegue uno.", "Batalla", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         Battle battle = new Battle(civilization.getArmy(), currentEnemyArmy);
         battle.startBattle();
-        
-        // Aplicar pérdidas de recursos (comida, madera, hierro) al jugador
+
+        // Aplicar pérdidas de recursos
         int foodLoss = battle.getResourcesLooses()[0][0];
         int woodLoss = battle.getResourcesLooses()[0][1];
         int ironLoss = battle.getResourcesLooses()[0][2];
-        
         civilization.setFood(Math.max(0, civilization.getFood() - foodLoss));
         civilization.setWood(Math.max(0, civilization.getWood() - woodLoss));
         civilization.setIron(Math.max(0, civilization.getIron() - ironLoss));
-        
         appendLog(String.format("Pérdidas tras la batalla: -%d comida, -%d madera, -%d hierro\n", foodLoss, woodLoss, ironLoss));
-        
+
         civilization.setBattles(civilization.getBattles() + 1);
         battleHistory.add(battle);
-        
+
         if (battle.isCivilizationWinner()) {
             int[] waste = battle.getWaste();
             civilization.setWood(civilization.getWood() + waste[0]);
@@ -211,6 +282,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
 
     private void refreshThreatIndicator(boolean threatActive) {
         middlePanel.setThreatActive(threatActive);
+        if (!threatActive) cancelCountdown();
     }
 
     public void appendLog(String msg) {

@@ -7,7 +7,7 @@ import java.awt.*;
 
 public class RightPanel extends JPanel {
     private CivilizationsGUI gui;
-    private JButton viewThreatBtn, battleBtn, reportsBtn, exitBtn;
+    private JButton viewThreatBtn, battleBtn, reportsBtn, exitBtn, searchBattleBtn;
 
     public RightPanel(CivilizationsGUI gui) {
         this.gui = gui;
@@ -64,6 +64,12 @@ public class RightPanel extends JPanel {
         }
 
         add(Box.createVerticalStrut(10), gbc);
+        gbc.gridy++;
+
+        searchBattleBtn = new JButton("Buscar Batalla");
+        styleButton(searchBattleBtn);
+        searchBattleBtn.addActionListener(e -> gui.forceEnemy());
+        add(searchBattleBtn, gbc);
         gbc.gridy++;
 
         viewThreatBtn = new JButton("Ver Amenaza");

@@ -73,8 +73,8 @@ public class Battle implements Variables {
     private void initialFleetNumber() {
         initialNumberUnitsCivilization = civilizationArmy.size();
         initialNumberUnitsEnemy = enemyArmy.size();
+        // Si alguno es cero, la batalla no puede continuar normalmente
     }
-
     private void calculateInitialCosts() {
         initialCostFleet[0] = fleetResourceCost(civilizationArmy);
         initialCostFleet[1] = fleetResourceCost(enemyArmy);
@@ -91,6 +91,10 @@ public class Battle implements Variables {
     }
 
     private int remainderPercentageFleet(ArrayList<MilitaryUnit> army, int initialTotal) {
+        if (initialTotal == 0) {
+            // Si no había unidades inicialmente, el porcentaje restante es 0 si sigue vacío, o 100 si tiene alguna (pero nunca debería pasar)
+            return army.size() == 0 ? 0 : 100;
+        }
         return (army.size() * 100) / initialTotal;
     }
 
@@ -164,6 +168,21 @@ public class Battle implements Variables {
     }
 
     public void startBattle() {
+        // Si alguno de los ejércitos está vacío, determinar ganador directamente
+        if (civilizationArmy.isEmpty() || enemyArmy.isEmpty()) {
+            // Actualizar pérdidas: el que no tiene unidades pierde todos sus recursos (cero)
+            updateResourcesLooses();
+            // No hay desarrollo de batalla
+            battleDevelopment.append("Batalla cancelada: uno de los ejércitos está vacío.\n");
+            if (civilizationArmy.isEmpty() && enemyArmy.isEmpty()) {
+                battleDevelopment.append("Ambos ejércitos están vacíos. No hay combate.\n");
+            } else if (civilizationArmy.isEmpty()) {
+                battleDevelopment.append("Tu ejército está vacío. Has perdido.\n");
+            } else {
+                battleDevelopment.append("El ejército enemigo está vacío. Has ganado.\n");
+            }
+            return;
+        }
         boolean civilizationTurn = random.nextBoolean();
         while (remainderPercentageFleet(civilizationArmy, initialNumberUnitsCivilization) > BATTLE_STOP_PERCENTAGE &&
                remainderPercentageFleet(enemyArmy, initialNumberUnitsEnemy) > BATTLE_STOP_PERCENTAGE) {

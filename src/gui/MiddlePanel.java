@@ -10,6 +10,7 @@ public class MiddlePanel extends JPanel {
     private JPanel threatPanel;
     private JLabel threatIcon;
     private JLabel threatLabel;
+    private JLabel countdownLabel;
 
     public MiddlePanel(CivilizationsGUI gui) {
         this.gui = gui;
@@ -30,8 +31,12 @@ public class MiddlePanel extends JPanel {
         threatIcon = new JLabel(gui.loadIcon("alert.png", 32, 32));
         threatLabel = new JLabel("No hay amenaza");
         threatLabel.setForeground(Color.GREEN);
+        countdownLabel = new JLabel("");
+        countdownLabel.setForeground(Color.YELLOW);
+        countdownLabel.setFont(new Font("Arial", Font.BOLD, 18));
         threatPanel.add(threatIcon);
         threatPanel.add(threatLabel);
+        threatPanel.add(countdownLabel);
 
         add(threatPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
@@ -53,6 +58,19 @@ public class MiddlePanel extends JPanel {
         } else {
             threatLabel.setText("Sin amenaza");
             threatLabel.setForeground(Color.GREEN);
+            countdownLabel.setText(""); // Limpiar cuenta atrás al desaparecer amenaza
         }
+    }
+
+    public void setCountdown(int seconds) {
+        if (seconds > 0) {
+            countdownLabel.setText(" " + seconds + "s");
+        } else {
+            countdownLabel.setText("");
+        }
+    }
+
+    public void clearCountdown() {
+        countdownLabel.setText("");
     }
 }

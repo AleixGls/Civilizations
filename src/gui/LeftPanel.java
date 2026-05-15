@@ -11,13 +11,14 @@ public class LeftPanel extends JPanel {
     private JLabel techDefLabel, techAtkLabel;
     private JLabel farmLabel, carpLabel, smithLabel, towerLabel, churchLabel;
     private JButton upgradeDefenseBtn, upgradeAttackBtn;
+    private JLabel upgradeDefenseCostLabel, upgradeAttackCostLabel;
 
     public LeftPanel(CivilizationsGUI gui) {
         this.gui = gui;
         setLayout(new GridBagLayout());
         setBackground(Color.BLACK);
         setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Gestión", TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), Color.WHITE));
-        setPreferredSize(new Dimension(250, 0));
+        setPreferredSize(new Dimension(280, 0));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 10, 5, 10);
@@ -48,15 +49,39 @@ public class LeftPanel extends JPanel {
         gbc.gridy++;
         upgradeDefenseBtn = new JButton("Mejorar Defensa");
         styleButton(upgradeDefenseBtn);
-        add(upgradeDefenseBtn, gbc);
+        // Panel de coste para mejora defensa
+        JPanel defCostPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+        defCostPanel.setBackground(Color.DARK_GRAY);
+        defCostPanel.add(new JLabel(gui.loadIcon("iron.png", 16, 16)));
+        upgradeDefenseCostLabel = new JLabel("0");
+        upgradeDefenseCostLabel.setForeground(Color.WHITE);
+        defCostPanel.add(upgradeDefenseCostLabel);
+        // Si hubiera coste de madera se añadiría aquí, pero en Variables es 0
+        JPanel defButtonPanel = new JPanel(new BorderLayout());
+        defButtonPanel.setBackground(Color.DARK_GRAY);
+        defButtonPanel.add(upgradeDefenseBtn, BorderLayout.CENTER);
+        defButtonPanel.add(defCostPanel, BorderLayout.SOUTH);
+        add(defButtonPanel, gbc);
         gbc.gridy++;
+
         techAtkLabel = new JLabel("Ataque: nivel 0");
         techAtkLabel.setForeground(Color.WHITE);
         add(techAtkLabel, gbc);
         gbc.gridy++;
         upgradeAttackBtn = new JButton("Mejorar Ataque");
         styleButton(upgradeAttackBtn);
-        add(upgradeAttackBtn, gbc);
+        JPanel atkCostPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+        atkCostPanel.setBackground(Color.DARK_GRAY);
+        atkCostPanel.add(new JLabel(gui.loadIcon("iron.png", 16, 16)));
+        upgradeAttackCostLabel = new JLabel("0");
+        upgradeAttackCostLabel.setForeground(Color.WHITE);
+        atkCostPanel.add(upgradeAttackCostLabel);
+        JPanel atkButtonPanel = new JPanel(new BorderLayout());
+        atkButtonPanel.setBackground(Color.DARK_GRAY);
+        atkButtonPanel.add(upgradeAttackBtn, BorderLayout.CENTER);
+        atkButtonPanel.add(atkCostPanel, BorderLayout.SOUTH);
+        add(atkButtonPanel, gbc);
+        gbc.gridy++;
 
         gbc.gridy++;
         add(createSectionTitle("EDIFICIOS"), gbc);
@@ -141,5 +166,11 @@ public class LeftPanel extends JPanel {
         smithLabel.setText("Herrerías: " + civ.getSmithy());
         towerLabel.setText("Torres Mágicas: " + civ.getMagicTower());
         churchLabel.setText("Iglesias: " + civ.getChurch());
+
+        // Actualizar costes de mejora
+        int defCost = Variables.UPGRADE_BASE_DEFENSE_TECHNOLOGY_IRON_COST + civ.getTechnologyDefense() * Variables.UPGRADE_PLUS_DEFENSE_TECHNOLOGY_IRON_COST;
+        int atkCost = Variables.UPGRADE_BASE_ATTACK_TECHNOLOGY_IRON_COST + civ.getTechnologyAttack() * Variables.UPGRADE_PLUS_ATTACK_TECHNOLOGY_IRON_COST;
+        upgradeDefenseCostLabel.setText(String.valueOf(defCost));
+        upgradeAttackCostLabel.setText(String.valueOf(atkCost));
     }
 }

@@ -141,35 +141,49 @@ public class Civilization implements Variables {
     }
 
     // Métodos genéricos para añadir unidades
+    
     private void addUnits(int type, int n, int foodCost, int woodCost, int ironCost, int manaCost,
-                          java.util.function.BiFunction<Integer, Integer, MilitaryUnit> creator) throws ResourceException, BuildingException {
-        if (type == 7 && magicTower == 0) { // Magician
-            throw new BuildingException("Se necesita al menos una Torre Mágica para crear magos");
-        }
-        if (type == 8 && church == 0) { // Priest
-            throw new BuildingException("Se necesita al menos una Iglesia para crear sacerdotes");
-        }
+    		java.util.function.BiFunction<Integer, Integer, MilitaryUnit> creator) throws ResourceException, BuildingException {
+    	if (type == 7 && magicTower == 0) { // Magician
+    		throw new BuildingException("Se necesita al menos una Torre Mágica para crear magos");
+    	}
+    	if (type == 8 && church == 0) { // Priest
+    		throw new BuildingException("Se necesita al menos una Iglesia para crear sacerdotes");
+    	}
 
-        int possible = n;
-        int availableFood = food / foodCost;
-        int availableWood = woodCost > 0 ? wood / woodCost : Integer.MAX_VALUE;
-        int availableIron = ironCost > 0 ? iron / ironCost : Integer.MAX_VALUE;
-        int availableMana = manaCost > 0 ? mana / manaCost : Integer.MAX_VALUE;
-        possible = Math.min(possible, availableFood);
-        possible = Math.min(possible, availableWood);
-        possible = Math.min(possible, availableIron);
-        possible = Math.min(possible, availableMana);
-        if (possible < n) {
-            throw new ResourceException("Recursos insuficientes. Solo se pudieron añadir " + possible + " de " + n);
-        }
-        // Restar recursos
-        food -= foodCost * possible;
-        wood -= woodCost * possible;
-        iron -= ironCost * possible;
-        mana -= manaCost * possible;
-        for (int i = 0; i < possible; i++) {
-            army[type].add(creator.apply(technologyDefense, technologyAttack));
-        }
+    	int possible = n;
+    	// Comida
+    	if (foodCost > 0) {
+    		int availableFood = food / foodCost;
+    		possible = Math.min(possible, availableFood);
+    	}
+    	// Madera
+    	if (woodCost > 0) {
+	int availableWood = wood / woodCost;
+	possible = Math.min(possible, availableWood);
+    	}
+    	// Hierro
+    	if (ironCost > 0) {
+    		int availableIron = iron / ironCost;
+    		possible = Math.min(possible, availableIron);
+    	}
+    	// Maná
+    	if (manaCost > 0) {
+    		int availableMana = mana / manaCost;
+    		possible = Math.min(possible, availableMana);
+    	}
+
+    	if (possible < n) {
+    		throw new ResourceException("Recursos insuficientes. Solo se puede añadir " + possible + " de " + n);
+    	}
+    	// Restar recursos
+    	if (foodCost > 0) food -= foodCost * possible;
+    	if (woodCost > 0) wood -= woodCost * possible;
+    	if (ironCost > 0) iron -= ironCost * possible;
+    	if (manaCost > 0) mana -= manaCost * possible;
+    	for (int i = 0; i < possible; i++) {
+    		army[type].add(creator.apply(technologyDefense, technologyAttack));
+    	}
     }
 
     public void newSwordsman(int n) throws ResourceException, BuildingException {

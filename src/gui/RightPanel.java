@@ -14,7 +14,7 @@ public class RightPanel extends JPanel {
         setLayout(new GridBagLayout());
         setBackground(Color.BLACK);
         setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Acciones", TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), Color.WHITE));
-        setPreferredSize(new Dimension(220, 0));
+        setPreferredSize(new Dimension(240, 0));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 10, 5, 10);
@@ -43,12 +43,18 @@ public class RightPanel extends JPanel {
 
             JPanel costPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2));
             costPanel.setBackground(Color.DARK_GRAY);
-            costPanel.add(new JLabel(gui.loadIcon("food.png", 16, 16)));
-            costPanel.add(new JLabel(String.valueOf(foodCosts[i])));
-            costPanel.add(new JLabel(gui.loadIcon("wood.png", 16, 16)));
-            costPanel.add(new JLabel(String.valueOf(woodCosts[i])));
-            costPanel.add(new JLabel(gui.loadIcon("iron.png", 16, 16)));
-            costPanel.add(new JLabel(String.valueOf(ironCosts[i])));
+            if (foodCosts[i] > 0) {
+                costPanel.add(new JLabel(gui.loadIcon("food.png", 16, 16)));
+                costPanel.add(new JLabel(String.valueOf(foodCosts[i])));
+            }
+            if (woodCosts[i] > 0) {
+                costPanel.add(new JLabel(gui.loadIcon("wood.png", 16, 16)));
+                costPanel.add(new JLabel(String.valueOf(woodCosts[i])));
+            }
+            if (ironCosts[i] > 0) {
+                costPanel.add(new JLabel(gui.loadIcon("iron.png", 16, 16)));
+                costPanel.add(new JLabel(String.valueOf(ironCosts[i])));
+            }
 
             panel.add(btn, BorderLayout.CENTER);
             panel.add(costPanel, BorderLayout.SOUTH);

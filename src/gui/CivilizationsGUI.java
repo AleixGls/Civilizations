@@ -45,7 +45,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
         initUI();
         startTimers();
         setTitle("Civilizations - Gestión de tu Imperio");
-        setSize(1200, 900);
+        setSize(1400, 1000);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -237,6 +237,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
         }
 
         Battle battle = new Battle(civilization.getArmy(), currentEnemyArmy);
+        battle.setCivilization(civilization);
         battle.startBattle();
 
         // Aplicar pérdidas de recursos

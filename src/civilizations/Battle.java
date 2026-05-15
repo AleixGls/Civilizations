@@ -1,31 +1,30 @@
-// ==================== Battle.java ====================
 package civilizations;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class Battle implements Variables {
+public class Battle implements Variables, Serializable {
+    private static final long serialVersionUID = 1L;
     private ArrayList<MilitaryUnit> civilizationArmy;
     private ArrayList<MilitaryUnit> enemyArmy;
-    private ArrayList<MilitaryUnit>[][] armies; // [2][9] pero usamos listas
     private StringBuilder battleDevelopment;
-    private int[][] initialCostFleet; // [2][3] (comida, madera, hierro)
+    private int[][] initialCostFleet;
     private int initialNumberUnitsCivilization;
     private int initialNumberUnitsEnemy;
-    private int[] wasteWoodIron; // [0] madera, [1] hierro
+    private int[] wasteWoodIron;
     private int enemyDrops;
     private int civilizationDrops;
-    private int[][] resourcesLooses; // [2][4]
-    private int[][] initialArmies; // [2][9]
+    private int[][] resourcesLooses;
+    private int[][] initialArmies;
     private int[] actualNumberUnitsCivilization;
     private int[] actualNumberUnitsEnemy;
-    private Random random;
+    private transient Random random;
+    private Civilization civilization; // Referencia para consumir maná
 
-    @SuppressWarnings("unchecked")
     public Battle(ArrayList<MilitaryUnit>[] civArmy, ArrayList<MilitaryUnit> enemyArmyList) {
         this.civilizationArmy = new ArrayList<>();
         this.enemyArmy = new ArrayList<>();
-        // Copiar ejércitos
-        for (int i=0; i<9; i++) {
+        for (int i = 0; i < 9; i++) {
             for (MilitaryUnit u : civArmy[i]) {
                 this.civilizationArmy.add(u);
             }
@@ -39,9 +38,14 @@ public class Battle implements Variables {
         this.actualNumberUnitsCivilization = new int[9];
         this.actualNumberUnitsEnemy = new int[9];
         this.wasteWoodIron = new int[2];
+        this.civilization = null; // Se debe establecer desde fuera antes de iniciar batalla
         initInitialArmies();
         initialFleetNumber();
         calculateInitialCosts();
+    }
+
+    public void setCivilization(Civilization civ) {
+        this.civilization = civ;
     }
 
     private void initInitialArmies() {
@@ -51,7 +55,7 @@ public class Battle implements Variables {
         }
         for (MilitaryUnit u : enemyArmy) {
             int type = getUnitType(u);
-            if (type != -1 && type <= 3) initialArmies[1][type]++; // enemigo solo ataque
+            if (type != -1 && type <= 3) initialArmies[1][type]++;
         }
         System.arraycopy(initialArmies[0], 0, actualNumberUnitsCivilization, 0, 9);
         System.arraycopy(initialArmies[1], 0, actualNumberUnitsEnemy, 0, 9);
@@ -73,15 +77,15 @@ public class Battle implements Variables {
     private void initialFleetNumber() {
         initialNumberUnitsCivilization = civilizationArmy.size();
         initialNumberUnitsEnemy = enemyArmy.size();
-        // Si alguno es cero, la batalla no puede continuar normalmente
     }
+
     private void calculateInitialCosts() {
         initialCostFleet[0] = fleetResourceCost(civilizationArmy);
         initialCostFleet[1] = fleetResourceCost(enemyArmy);
     }
 
     private int[] fleetResourceCost(ArrayList<MilitaryUnit> army) {
-        int food=0, wood=0, iron=0;
+        int food = 0, wood = 0, iron = 0;
         for (MilitaryUnit u : army) {
             food += u.getFoodCost();
             wood += u.getWoodCost();
@@ -91,10 +95,7 @@ public class Battle implements Variables {
     }
 
     private int remainderPercentageFleet(ArrayList<MilitaryUnit> army, int initialTotal) {
-        if (initialTotal == 0) {
-            // Si no había unidades inicialmente, el porcentaje restante es 0 si sigue vacío, o 100 si tiene alguna (pero nunca debería pasar)
-            return army.size() == 0 ? 0 : 100;
-        }
+        if (initialTotal == 0) return army.size() == 0 ? 0 : 100;
         return (army.size() * 100) / initialTotal;
     }
 
@@ -103,14 +104,14 @@ public class Battle implements Variables {
         int[] counts = new int[maxType];
         for (MilitaryUnit u : army) {
             int t = getUnitType(u);
-            if (t >=0 && t < maxType) counts[t]++;
+            if (t >= 0 && t < maxType) counts[t]++;
         }
         int total = 0;
         for (int c : counts) total += c;
         if (total == 0) return -1;
         int rand = random.nextInt(total) + 1;
         int acum = 0;
-        for (int i=0; i<counts.length; i++) {
+        for (int i = 0; i < counts.length; i++) {
             acum += counts[i];
             if (acum >= rand) return i;
         }
@@ -123,7 +124,7 @@ public class Battle implements Variables {
         for (int p : probs) total += p;
         int rand = random.nextInt(total) + 1;
         int acum = 0;
-        for (int i=0; i<probs.length; i++) {
+        for (int i = 0; i < probs.length; i++) {
             acum += probs[i];
             if (acum >= rand) return i;
         }
@@ -167,13 +168,11 @@ public class Battle implements Variables {
         for (MilitaryUnit u : enemyArmy) u.resetArmor();
     }
 
+    // Método principal de batalla con santificación
     public void startBattle() {
-        // Si alguno de los ejércitos está vacío, determinar ganador directamente
+        // Verificar si hay ejércitos vacíos
         if (civilizationArmy.isEmpty() || enemyArmy.isEmpty()) {
-            // Actualizar pérdidas: el que no tiene unidades pierde todos sus recursos (cero)
             updateResourcesLooses();
-            // No hay desarrollo de batalla
-            battleDevelopment.append("Batalla cancelada: uno de los ejércitos está vacío.\n");
             if (civilizationArmy.isEmpty() && enemyArmy.isEmpty()) {
                 battleDevelopment.append("Ambos ejércitos están vacíos. No hay combate.\n");
             } else if (civilizationArmy.isEmpty()) {
@@ -183,12 +182,32 @@ public class Battle implements Variables {
             }
             return;
         }
+
+        // Aplicar santificación si hay sacerdotes y maná suficiente
+        boolean sanctifiedActive = false;
+        if (civilization != null && civilization.hasPriests() && civilization.hasManaForSanctification()) {
+            civilization.sanctifyArmy(true);
+            sanctifiedActive = true;
+            battleDevelopment.append("Los sacerdotes santifican al ejército. Las unidades reciben un bonus de +7% armadura y daño.\n");
+            // Consumir maná por cada sacerdote (por simplificar, gasto fijo de 50 por batalla)
+            civilization.setMana(civilization.getMana() - 50);
+        } else if (civilization != null && (!civilization.hasPriests() || !civilization.hasManaForSanctification())) {
+            civilization.sanctifyArmy(false);
+            battleDevelopment.append("No hay suficientes sacerdotes o maná para la santificación.\n");
+        }
+
         boolean civilizationTurn = random.nextBoolean();
         while (remainderPercentageFleet(civilizationArmy, initialNumberUnitsCivilization) > BATTLE_STOP_PERCENTAGE &&
                remainderPercentageFleet(enemyArmy, initialNumberUnitsEnemy) > BATTLE_STOP_PERCENTAGE) {
             if (civilizationTurn) {
                 battleDevelopment.append("*****************CHANGE ATTACKER********************\nAttacks Civilization:\n");
                 performAttack(civilizationArmy, enemyArmy, true);
+                // Si mueren todos los sacerdotes, desactivar santificación
+                if (sanctifiedActive && civilization != null && !civilization.hasPriests()) {
+                    civilization.sanctifyArmy(false);
+                    sanctifiedActive = false;
+                    battleDevelopment.append("Todos los sacerdotes han muerto. La santificación se desvanece.\n");
+                }
             } else {
                 battleDevelopment.append("*****************CHANGE ATTACKER********************\nAttacks army enemy:\n");
                 performAttack(enemyArmy, civilizationArmy, false);
@@ -197,6 +216,8 @@ public class Battle implements Variables {
         }
         updateResourcesLooses();
         resetArmyArmor();
+        // Desactivar santificación al final de la batalla
+        if (civilization != null) civilization.sanctifyArmy(false);
     }
 
     private void performAttack(ArrayList<MilitaryUnit> attackers, ArrayList<MilitaryUnit> defenders, boolean isCivilizationAttacker) {
@@ -270,14 +291,12 @@ public class Battle implements Variables {
         return battleDevelopment.toString();
     }
 
+    public int[] getWaste() { return wasteWoodIron; }
+    public boolean isCivilizationWinner() { return resourcesLooses[0][3] < resourcesLooses[1][3]; }
+    public int[][] getResourcesLooses() { return resourcesLooses; }
+
     private String getUnitNameByIndex(int i) {
         String[] names = {"Swordsman","Spearman","Crossbow","Cannon","Arrow Tower","Catapult","Rocket Launcher","Magician","Priest"};
         return names[i];
-    }
-
-    public int[] getWaste() { return wasteWoodIron; }
-    public boolean isCivilizationWinner() { return resourcesLooses[0][3] < resourcesLooses[1][3];}
-    public int[][] getResourcesLooses() {
-        return resourcesLooses;
     }
 }

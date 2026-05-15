@@ -37,10 +37,10 @@ public class CivilizationsGUI extends JFrame implements Variables {
         } else {
             this.civilization = new Civilization();
             this.battleHistory = new ArrayList<>();
-            this.civilization.setFood(50000);
-            this.civilization.setWood(50000);
-            this.civilization.setIron(50000);
-            this.civilization.setMana(0);
+            this.civilization.setFood(500000);
+            this.civilization.setWood(500000);
+            this.civilization.setIron(500000);
+            this.civilization.setMana(500000);
             this.enemyPending = false;
             this.currentEnemyArmy = null;
         }
@@ -71,7 +71,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
     private void startTimers() {
         // Generación de recursos cada 60 segundos
         TimerTask resourceTask = new TimerTask() {
-            @Override
             public void run() {
                 SwingUtilities.invokeLater(() -> generateResources());
             }
@@ -80,7 +79,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
 
         // Creación de enemigo cada 180 segundos (3 minutos)
         TimerTask enemyTask = new TimerTask() {
-            @Override
             public void run() {
                 SwingUtilities.invokeLater(() -> {
                     if (!enemyPending) {
@@ -179,7 +177,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
         cancelCountdown();
         final int[] timeLeft = {10};
         countdownTask = new TimerTask() {
-            @Override
             public void run() {
                 SwingUtilities.invokeLater(() -> {
                     if (enemyPending) {
@@ -284,6 +281,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
         try {
             GameSaver gameSaver = new GameSaver(GlobalContext.database);
             gameSaver.saveGame(civilization, battleHistory);
+            setTitle("Civilizations - Hola, usuario nº "+GlobalContext.civilization_id);
             appendLog("Partida guardada en base de datos.\n");
             JOptionPane.showMessageDialog(this, "Partida guardada", "Guardado", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {

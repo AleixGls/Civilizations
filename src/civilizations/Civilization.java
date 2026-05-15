@@ -26,10 +26,10 @@ public class Civilization implements Variables, Serializable {
 	public Civilization() {
 		technologyDefense = 0;
 		technologyAttack = 0;
-		wood = 0;
-		iron = 0;
-		food = 0;
-		mana = 0;
+		wood = 99999990;
+		iron = 99999990;
+		food = 99999990;
+		mana = 99999990;
 		magicTower = 0;
 		church = 0;
 		farm = 0;

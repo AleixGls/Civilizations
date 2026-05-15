@@ -19,7 +19,8 @@ public class Battle implements Variables, Serializable {
     private int[] actualNumberUnitsCivilization;
     private int[] actualNumberUnitsEnemy;
     private transient Random random;
-    private Civilization civilization; // Referencia para consumir maná
+    private Civilization civilization;
+    private int battleNumber; // assigned from Main: civilization.getBattles() + 1
 
     public Battle(ArrayList<MilitaryUnit>[] civArmy, ArrayList<MilitaryUnit> enemyArmyList) {
         this.civilizationArmy = new ArrayList<>();
@@ -38,7 +39,8 @@ public class Battle implements Variables, Serializable {
         this.actualNumberUnitsCivilization = new int[9];
         this.actualNumberUnitsEnemy = new int[9];
         this.wasteWoodIron = new int[2];
-        this.civilization = null; // Se debe establecer desde fuera antes de iniciar batalla
+        this.civilization = null;
+        this.battleNumber = 0;
         initInitialArmies();
         initialFleetNumber();
         calculateInitialCosts();
@@ -46,6 +48,14 @@ public class Battle implements Variables, Serializable {
 
     public void setCivilization(Civilization civ) {
         this.civilization = civ;
+    }
+
+    public void setBattleNumber(int battleNumber) {
+        this.battleNumber = battleNumber;
+    }
+
+    public int getBattleNumber() {
+        return civilization.getBattles()+1;
     }
 
     private void initInitialArmies() {
@@ -168,9 +178,7 @@ public class Battle implements Variables, Serializable {
         for (MilitaryUnit u : enemyArmy) u.resetArmor();
     }
 
-    // Método principal de batalla con santificación
     public void startBattle() {
-        // Verificar si hay ejércitos vacíos
         if (civilizationArmy.isEmpty() || enemyArmy.isEmpty()) {
             updateResourcesLooses();
             if (civilizationArmy.isEmpty() && enemyArmy.isEmpty()) {
@@ -183,15 +191,13 @@ public class Battle implements Variables, Serializable {
             return;
         }
 
-        // Aplicar santificación si hay sacerdotes y maná suficiente
         boolean sanctifiedActive = false;
         if (civilization != null && civilization.hasPriests() && civilization.hasManaForSanctification()) {
             civilization.sanctifyArmy(true);
             sanctifiedActive = true;
-            battleDevelopment.append("Los sacerdotes santifican al ejército. Las unidades reciben un bonus de +7% armadura y daño.\n");
-            // Consumir maná por cada sacerdote (por simplificar, gasto fijo de 50 por batalla)
+            battleDevelopment.append("Los sacerdotes santifican al ejército.\n");
             civilization.setMana(civilization.getMana() - 50);
-        } else if (civilization != null && (!civilization.hasPriests() || !civilization.hasManaForSanctification())) {
+        } else if (civilization != null) {
             civilization.sanctifyArmy(false);
             battleDevelopment.append("No hay suficientes sacerdotes o maná para la santificación.\n");
         }
@@ -202,7 +208,6 @@ public class Battle implements Variables, Serializable {
             if (civilizationTurn) {
                 battleDevelopment.append("*****************CHANGE ATTACKER********************\nAttacks Civilization:\n");
                 performAttack(civilizationArmy, enemyArmy, true);
-                // Si mueren todos los sacerdotes, desactivar santificación
                 if (sanctifiedActive && civilization != null && !civilization.hasPriests()) {
                     civilization.sanctifyArmy(false);
                     sanctifiedActive = false;
@@ -216,7 +221,6 @@ public class Battle implements Variables, Serializable {
         }
         updateResourcesLooses();
         resetArmyArmor();
-        // Desactivar santificación al final de la batalla
         if (civilization != null) civilization.sanctifyArmy(false);
     }
 
@@ -261,25 +265,39 @@ public class Battle implements Variables, Serializable {
 
     public String getBattleReport() {
         StringBuilder sb = new StringBuilder();
+        sb.append("BATTLE NUMBER: ").append(battleNumber).append("\n");
         sb.append("BATTLE STATISTICS\n");
-        sb.append("Army planet\nUnits\tDrops\n");
-        for (int i=0; i<9; i++) {
+        sb.append("Army Civilization\nUnits\tDrops\n");
+        for (int i = 0; i < 9; i++) {
             if (initialArmies[0][i] > 0) {
-                sb.append(getUnitNameByIndex(i)).append("\t").append(initialArmies[0][i]).append("\t").append(initialArmies[0][i] - actualNumberUnitsCivilization[i]).append("\n");
+                sb.append(getUnitNameByIndex(i)).append("\t")
+                  .append(initialArmies[0][i]).append("\t")
+                  .append(initialArmies[0][i] - actualNumberUnitsCivilization[i]).append("\n");
             }
         }
         sb.append("Initial Army Enemy\nUnits\tDrops\n");
-        for (int i=0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             if (initialArmies[1][i] > 0) {
-                sb.append(getUnitNameByIndex(i)).append("\t").append(initialArmies[1][i]).append("\t").append(initialArmies[1][i] - actualNumberUnitsEnemy[i]).append("\n");
+                sb.append(getUnitNameByIndex(i)).append("\t")
+                  .append(initialArmies[1][i]).append("\t")
+                  .append(initialArmies[1][i] - actualNumberUnitsEnemy[i]).append("\n");
             }
         }
-        sb.append("Cost Army Civilization: Food=").append(initialCostFleet[0][0]).append(" Wood=").append(initialCostFleet[0][1]).append(" Iron=").append(initialCostFleet[0][2]).append("\n");
-        sb.append("Cost Army Enemy: Food=").append(initialCostFleet[1][0]).append(" Wood=").append(initialCostFleet[1][1]).append(" Iron=").append(initialCostFleet[1][2]).append("\n");
-        sb.append("Losses Army Civilization: Food=").append(resourcesLooses[0][0]).append(" Wood=").append(resourcesLooses[0][1]).append(" Iron=").append(resourcesLooses[0][2]).append("\n");
-        sb.append("Losses Army Enemy: Food=").append(resourcesLooses[1][0]).append(" Wood=").append(resourcesLooses[1][1]).append(" Iron=").append(resourcesLooses[1][2]).append("\n");
-        sb.append("Waste Generated: Wood ").append(wasteWoodIron[0]).append(" Iron ").append(wasteWoodIron[1]).append("\n");
-        if (resourcesLooses[0][3] < resourcesLooses[1][3]) {
+        sb.append("Cost Army Civilization: Food=").append(initialCostFleet[0][0])
+          .append(" Wood=").append(initialCostFleet[0][1])
+          .append(" Iron=").append(initialCostFleet[0][2]).append("\n");
+        sb.append("Cost Army Enemy: Food=").append(initialCostFleet[1][0])
+          .append(" Wood=").append(initialCostFleet[1][1])
+          .append(" Iron=").append(initialCostFleet[1][2]).append("\n");
+        sb.append("Losses Army Civilization: Food=").append(resourcesLooses[0][0])
+          .append(" Wood=").append(resourcesLooses[0][1])
+          .append(" Iron=").append(resourcesLooses[0][2]).append("\n");
+        sb.append("Losses Army Enemy: Food=").append(resourcesLooses[1][0])
+          .append(" Wood=").append(resourcesLooses[1][1])
+          .append(" Iron=").append(resourcesLooses[1][2]).append("\n");
+        sb.append("Waste Generated: Wood ").append(wasteWoodIron[0])
+          .append(" Iron ").append(wasteWoodIron[1]).append("\n");
+        if (isCivilizationWinner()) {
             sb.append("Battle Won by Civilization, We Collect Rubble\n");
         } else {
             sb.append("Battle Lost by Civilization\n");
@@ -291,12 +309,17 @@ public class Battle implements Variables, Serializable {
         return battleDevelopment.toString();
     }
 
-    public int[] getWaste() { return wasteWoodIron; }
-    public boolean isCivilizationWinner() { return resourcesLooses[0][3] < resourcesLooses[1][3]; }
-    public int[][] getResourcesLooses() { return resourcesLooses; }
+    public int[] getWaste()                  { return wasteWoodIron; }
+    public boolean isCivilizationWinner()    { return resourcesLooses[0][3] < resourcesLooses[1][3]; }
+    public int[][] getResourcesLooses()      { return resourcesLooses; }
+    public int[][] getInitialArmies()        { return initialArmies; }
+    public int[] getActualNumberUnitsCivilization() { return actualNumberUnitsCivilization; }
+    public int[] getActualNumberUnitsEnemy()        { return actualNumberUnitsEnemy; }
+    public int[][] getInitialCostFleet()     { return initialCostFleet; }
 
     private String getUnitNameByIndex(int i) {
-        String[] names = {"Swordsman","Spearman","Crossbow","Cannon","Arrow Tower","Catapult","Rocket Launcher","Magician","Priest"};
+        String[] names = {"Swordsman","Spearman","Crossbow","Cannon",
+                          "Arrow Tower","Catapult","Rocket Launcher","Magician","Priest"};
         return names[i];
     }
-}
+}	

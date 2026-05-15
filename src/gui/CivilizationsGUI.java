@@ -1,6 +1,9 @@
 package gui;
 
 import civilizations.*;
+import bbdd.Database;
+import bbdd.GameSaver;
+import bbdd.GlobalContext;
 import bbdd.SaveData;
 
 import javax.swing.*;
@@ -26,7 +29,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
 
     // Constructor para nueva partida o carga desde StartScreen
     public CivilizationsGUI(Civilization loadedCiv, List<Battle> loadedHistory) {
-        if (loadedCiv != null && loadedHistory != null) {
+        if (loadedCiv != null || loadedHistory != null) {
             this.civilization = loadedCiv;
             this.battleHistory = loadedHistory;
             this.enemyPending = false;
@@ -278,13 +281,14 @@ public class CivilizationsGUI extends JFrame implements Variables {
 
     public void saveGame() {
         SaveData data = new SaveData(civilization, battleHistory);
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("savegame.ser"))) {
-            oos.writeObject(data);
-            appendLog("Partida guardada correctamente.\n");
+        try {
+            GameSaver gameSaver = new GameSaver(GlobalContext.database);
+            gameSaver.saveGame(civilization, battleHistory);
+            appendLog("Partida guardada en base de datos.\n");
             JOptionPane.showMessageDialog(this, "Partida guardada", "Guardado", JOptionPane.INFORMATION_MESSAGE);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error al guardar la partida", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error al guardar en base de datos", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -332,6 +336,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
 
     // Punto de entrada: muestra la pantalla de inicio (StartScreen)
     public static void main(String[] args) {
+
         SwingUtilities.invokeLater(() -> new StartScreen());
     }
 }

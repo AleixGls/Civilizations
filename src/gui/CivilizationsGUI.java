@@ -17,7 +17,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
     private ArrayList<MilitaryUnit> currentEnemyArmy;
     private boolean enemyPending;
     private Timer gameTimer;
-    private JTextArea logArea;
     private LeftPanel leftPanel;
     private MiddlePanel middlePanel;
     private RightPanel rightPanel;
@@ -29,7 +28,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
         enemyPending = false;
         gameTimer = new Timer();
 
-        // Recursos iniciales para empezar con algo
         civilization.setFood(50000);
         civilization.setWood(50000);
         civilization.setIron(50000);
@@ -48,12 +46,10 @@ public class CivilizationsGUI extends JFrame implements Variables {
     private void initUI() {
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.BLACK);
-
         leftPanel = new LeftPanel();
         middlePanel = new MiddlePanel();
         rightPanel = new RightPanel();
         bottomPanel = new BottomPanel();
-
         add(leftPanel, BorderLayout.WEST);
         add(middlePanel, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
@@ -61,7 +57,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
     }
 
     private void startTimers() {
-        // Generación de recursos cada 60 segundos
         TimerTask resourceTask = new TimerTask() {
             @Override
             public void run() {
@@ -70,7 +65,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
         };
         gameTimer.schedule(resourceTask, 60000, 60000);
 
-        // Creación de enemigo cada 180 segundos (3 minutos)
         TimerTask enemyTask = new TimerTask() {
             @Override
             public void run() {
@@ -110,16 +104,16 @@ public class CivilizationsGUI extends JFrame implements Variables {
         int availableFood = FOOD_BASE_ENEMY_ARMY * (100 + increment) / 100;
         ArrayList<MilitaryUnit> army = new ArrayList<>();
         java.util.Random rand = new java.util.Random();
-        int[] probs = {35, 25, 20, 20}; // Swordsman, Spearman, Crossbow, Cannon
+        int[] probs = {35, 25, 20, 20};
         while (true) {
             int type = selectByProb(probs, rand);
             MilitaryUnit unit = null;
-            int foodCost = 0, woodCost = 0, ironCost = 0;
+            int foodCost=0, woodCost=0, ironCost=0;
             switch (type) {
-                case 0: unit = new Swordsman(); foodCost = FOOD_COST_SWORDSMAN; woodCost = WOOD_COST_SWORDSMAN; ironCost = IRON_COST_SWORDSMAN; break;
-                case 1: unit = new Spearman(); foodCost = FOOD_COST_SPEARMAN; woodCost = WOOD_COST_SPEARMAN; ironCost = IRON_COST_SPEARMAN; break;
-                case 2: unit = new Crossbow(); foodCost = FOOD_COST_CROSSBOW; woodCost = WOOD_COST_CROSSBOW; ironCost = IRON_COST_CROSSBOW; break;
-                case 3: unit = new Cannon(); foodCost = FOOD_COST_CANNON; woodCost = WOOD_COST_CANNON; ironCost = IRON_COST_CANNON; break;
+                case 0: unit = new Swordsman(); foodCost=FOOD_COST_SWORDSMAN; woodCost=WOOD_COST_SWORDSMAN; ironCost=IRON_COST_SWORDSMAN; break;
+                case 1: unit = new Spearman(); foodCost=FOOD_COST_SPEARMAN; woodCost=WOOD_COST_SPEARMAN; ironCost=IRON_COST_SPEARMAN; break;
+                case 2: unit = new Crossbow(); foodCost=FOOD_COST_CROSSBOW; woodCost=WOOD_COST_CROSSBOW; ironCost=IRON_COST_CROSSBOW; break;
+                case 3: unit = new Cannon(); foodCost=FOOD_COST_CANNON; woodCost=WOOD_COST_CANNON; ironCost=IRON_COST_CANNON; break;
             }
             if (availableFood >= foodCost && availableWood >= woodCost && availableIron >= ironCost) {
                 army.add(unit);
@@ -127,7 +121,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
                 availableWood -= woodCost;
                 availableIron -= ironCost;
             } else {
-                // Intentar con la unidad más barata (Swordsman)
                 if (availableFood >= FOOD_COST_SWORDSMAN && availableWood >= WOOD_COST_SWORDSMAN && availableIron >= IRON_COST_SWORDSMAN) {
                     army.add(new Swordsman());
                     availableFood -= FOOD_COST_SWORDSMAN;
@@ -146,7 +139,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
         for (int p : probs) total += p;
         int r = rand.nextInt(total) + 1;
         int acum = 0;
-        for (int i = 0; i < probs.length; i++) {
+        for (int i=0; i<probs.length; i++) {
             acum += probs[i];
             if (acum >= r) return i;
         }
@@ -212,7 +205,21 @@ public class CivilizationsGUI extends JFrame implements Variables {
         }
     }
 
-    // ==================== PANELES INTERNOS ====================
+    private String getImagePath(String fileName) {
+        return "./src/gui/images/" + fileName;
+    }
+
+    private ImageIcon loadIcon(String fileName, int width, int height) {
+        try {
+            ImageIcon icon = new ImageIcon(getImagePath(fileName));
+            Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            return new ImageIcon(img);
+        } catch (Exception e) {
+            return new ImageIcon();
+        }
+    }
+
+    // ==================== PANELES ====================
 
     class LeftPanel extends JPanel {
         private JLabel foodLabel, woodLabel, ironLabel, manaLabel;
@@ -232,22 +239,20 @@ public class CivilizationsGUI extends JFrame implements Variables {
             gbc.gridy = 0;
             gbc.gridwidth = 2;
 
-            // Título Recursos
             add(createSectionTitle("RECURSOS"), gbc);
             gbc.gridy++;
-            foodLabel = createResourceLabel("Comida", "./M3-Programacion/GUI/images/wheat.png");
+            foodLabel = createResourceLabel("Comida", "food.png");
             add(foodLabel, gbc);
             gbc.gridy++;
-            woodLabel = createResourceLabel("Madera", "./M3-Programacion/GUI/images/oak_log.png");
+            woodLabel = createResourceLabel("Madera", "wood.png");
             add(woodLabel, gbc);
             gbc.gridy++;
-            ironLabel = createResourceLabel("Hierro", "./M3-Programacion/GUI/images/iron_ingot.png");
+            ironLabel = createResourceLabel("Hierro", "iron.png");
             add(ironLabel, gbc);
             gbc.gridy++;
-            manaLabel = createResourceLabel("Maná", "./M3-Programacion/GUI/images/redstone.png");
+            manaLabel = createResourceLabel("Maná", "mana.png");
             add(manaLabel, gbc);
 
-            // Tecnología
             gbc.gridy++;
             add(createSectionTitle("TECNOLOGÍA"), gbc);
             gbc.gridy++;
@@ -267,42 +272,41 @@ public class CivilizationsGUI extends JFrame implements Variables {
             styleButton(upgradeAttackBtn);
             add(upgradeAttackBtn, gbc);
 
-            // Edificios
             gbc.gridy++;
             add(createSectionTitle("EDIFICIOS"), gbc);
             gbc.gridy++;
-            farmLabel = createBuildingLabel("Granjas", "./M3-Programacion/GUI/images/farm.png");
+            farmLabel = createBuildingLabel("Granjas", "farm.png");
             add(farmLabel, gbc);
             gbc.gridy++;
-            carpLabel = createBuildingLabel("Carpinterías", "./M3-Programacion/GUI/images/carpentry.png");
+            carpLabel = createBuildingLabel("Carpinterías", "carpentry.png");
             add(carpLabel, gbc);
             gbc.gridy++;
-            smithLabel = createBuildingLabel("Herrerías", "./M3-Programacion/GUI/images/smithy.png");
+            smithLabel = createBuildingLabel("Herrerías", "smithy.png");
             add(smithLabel, gbc);
             gbc.gridy++;
-            towerLabel = createBuildingLabel("Torres Mágicas", "./M3-Programacion/GUI/images/magic_tower.png");
+            towerLabel = createBuildingLabel("Torres Mágicas", "magicTower.png");
             add(towerLabel, gbc);
             gbc.gridy++;
-            churchLabel = createBuildingLabel("Iglesias", "./M3-Programacion/GUI/images/church.png");
+            churchLabel = createBuildingLabel("Iglesias", "church.png");
             add(churchLabel, gbc);
 
             upgradeDefenseBtn.addActionListener(e -> upgradeTech(true));
             upgradeAttackBtn.addActionListener(e -> upgradeTech(false));
         }
 
-        private JLabel createResourceLabel(String name, String iconPath) {
+        private JLabel createResourceLabel(String name, String iconFile) {
             JLabel label = new JLabel();
             label.setForeground(Color.WHITE);
-            label.setIcon(loadIcon(iconPath, 32, 32));
+            label.setIcon(loadIcon(iconFile, 32, 32));
             label.setText(name + ": 0");
             label.setIconTextGap(10);
             return label;
         }
 
-        private JLabel createBuildingLabel(String name, String iconPath) {
+        private JLabel createBuildingLabel(String name, String iconFile) {
             JLabel label = new JLabel();
             label.setForeground(Color.WHITE);
-            label.setIcon(loadIcon(iconPath, 24, 24));
+            label.setIcon(loadIcon(iconFile, 24, 24));
             label.setText(name + ": 0");
             label.setIconTextGap(10);
             return label;
@@ -373,7 +377,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
 
             threatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             threatPanel.setBackground(Color.BLACK);
-            threatIcon = new JLabel(loadIcon("./M3-Programacion/GUI/images/alert.png", 32, 32));
+            threatIcon = new JLabel(loadIcon("alert.png", 32, 32));
             threatLabel = new JLabel("No hay amenaza");
             threatLabel.setForeground(Color.GREEN);
             threatPanel.add(threatIcon);
@@ -388,9 +392,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
             log.setCaretPosition(log.getDocument().getLength());
         }
 
-        void refresh() {
-            // No es necesario actualizar nada más
-        }
+        void refresh() { }
 
         void setThreatActive(boolean active) {
             if (active) {
@@ -428,21 +430,17 @@ public class CivilizationsGUI extends JFrame implements Variables {
                 add(buildingButtons[i], gbc);
                 gbc.gridy++;
             }
-
             add(Box.createVerticalStrut(20), gbc);
             gbc.gridy++;
-
             viewThreatBtn = new JButton("Ver Amenaza");
             battleBtn = new JButton("¡LIBAR BATALLA!");
             reportsBtn = new JButton("Informes");
             exitBtn = new JButton("Salir");
-
             for (JButton btn : new JButton[]{viewThreatBtn, battleBtn, reportsBtn, exitBtn}) {
                 styleButton(btn);
                 add(btn, gbc);
                 gbc.gridy++;
             }
-
             viewThreatBtn.addActionListener(e -> viewThreat());
             battleBtn.addActionListener(e -> startBattle());
             reportsBtn.addActionListener(e -> showBattleReports());
@@ -471,15 +469,13 @@ public class CivilizationsGUI extends JFrame implements Variables {
             }
         }
 
-        void refresh() {
-            // No necesita actualización dinámica
-        }
+        void refresh() { }
     }
 
     class BottomPanel extends JPanel {
         private JButton[] unitButtons;
         private String[] unitNames = {"Espadachín", "Lancero", "Ballesta", "Cañón", "Torre flecha", "Catapulta", "Lanzacohetes", "Mago", "Sacerdote"};
-        private String[] unitIcons = {"swordsman.png", "spearman.png", "crossbow.png", "cannon.png", "arrow_tower.png", "catapult.png", "rocket_launcher.png", "magician.png", "priest.png"};
+        private String[] unitIcons = {"swordsman.png", "spearman.png", "crossbow.png", "cannon.png", "arrowTower.png", "catapult.png", "rocketLauncher.png", "magician.png", "priest.png"};
 
         BottomPanel() {
             setLayout(new GridLayout(2, 5, 10, 10));
@@ -493,21 +489,18 @@ public class CivilizationsGUI extends JFrame implements Variables {
                 unitButtons[i].setBackground(Color.DARK_GRAY);
                 unitButtons[i].setForeground(Color.WHITE);
                 unitButtons[i].setFocusPainted(false);
-                // Icono
-                JLabel iconLabel = new JLabel(loadIcon("./M3-Programacion/GUI/images/" + unitIcons[i], 50, 50));
-                // Texto
+                JLabel iconLabel = new JLabel(loadIcon(unitIcons[i], 50, 50));
                 JLabel textLabel = new JLabel(unitNames[type] + " (0)");
                 textLabel.setForeground(Color.WHITE);
                 textLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                // Costes
                 JPanel costPanel = new JPanel(new FlowLayout());
                 costPanel.setBackground(Color.DARK_GRAY);
                 int metalCost = IRON_COST_UNITS[type];
                 int manaCost = getManaCost(type);
-                costPanel.add(new JLabel(loadIcon("./M3-Programacion/GUI/images/iron_ingot.png", 16, 16)));
+                costPanel.add(new JLabel(loadIcon("iron.png", 16, 16)));
                 costPanel.add(new JLabel(String.valueOf(metalCost)));
                 if (manaCost > 0) {
-                    costPanel.add(new JLabel(loadIcon("./M3-Programacion/GUI/images/redstone.png", 16, 16)));
+                    costPanel.add(new JLabel(loadIcon("mana.png", 16, 16)));
                     costPanel.add(new JLabel(String.valueOf(manaCost)));
                 }
                 unitButtons[i].add(iconLabel, BorderLayout.NORTH);
@@ -556,7 +549,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
         }
     }
 
-    // ==================== THREAT FRAME ====================
     class ThreatFrame extends JFrame {
         ThreatFrame(ArrayList<MilitaryUnit> enemyArmy) {
             setTitle("Amenaza Enemiga");
@@ -565,7 +557,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
             setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             setLayout(new FlowLayout());
             getContentPane().setBackground(Color.BLACK);
-
             int[] counts = new int[4];
             for (MilitaryUnit u : enemyArmy) {
                 if (u instanceof Swordsman) counts[0]++;
@@ -580,7 +571,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
                     JPanel panel = new JPanel();
                     panel.setBackground(Color.DARK_GRAY);
                     panel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-                    panel.add(new JLabel(loadIcon("./M3-Programacion/GUI/images/" + icons[i], 64, 64)));
+                    panel.add(new JLabel(loadIcon(icons[i], 64, 64)));
                     JLabel text = new JLabel(names[i] + " x" + counts[i]);
                     text.setForeground(Color.WHITE);
                     panel.add(text);
@@ -588,17 +579,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
                 }
             }
             setVisible(true);
-        }
-    }
-
-    // ==================== UTILIDADES ====================
-    private ImageIcon loadIcon(String path, int width, int height) {
-        try {
-            ImageIcon icon = new ImageIcon(path);
-            Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-            return new ImageIcon(img);
-        } catch (Exception e) {
-            return new ImageIcon();
         }
     }
 

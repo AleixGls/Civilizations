@@ -47,7 +47,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
         this.gameTimer = new Timer();
         initUI();
         startTimers();
-        setTitle("Civilizations - Gestión de tu Imperio");
+        setTitle("Civilizations - Hola, usuario nº "+GlobalContext.civilization_id);
         setSize(1400, 1000);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);

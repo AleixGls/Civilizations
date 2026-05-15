@@ -60,7 +60,7 @@ public class Main implements Variables {
             option = scanner.nextInt();
             scanner.nextLine();
             switch (option) {
-                case 1: civilization.printStats(); break;
+
                 case 2: buildMenu(scanner); break;
                 case 3: techMenu(scanner); break;
                 case 4: unitMenu(scanner); break;

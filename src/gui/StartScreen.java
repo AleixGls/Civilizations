@@ -122,7 +122,7 @@ public class StartScreen extends JFrame {
             civilization.setFarm(rs.getInt("farm_counter"));
             civilization.setSmithy(rs.getInt("smithy_counter"));
             civilization.setCarpentry(rs.getInt("carpentry_counter"));
-            civilization.setTechnologyAttack(rs.getInt("technology_defense_level"));
+            civilization.setTechnologyDefense(rs.getInt("technology_defense_level"));
             civilization.setTechnologyAttack(rs.getInt("technology_attack_level"));
             civilization.setBattles(rs.getInt("battles_counter"));
             

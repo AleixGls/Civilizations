@@ -7,14 +7,14 @@ import java.awt.*;
 
 public class RightPanel extends JPanel {
     private CivilizationsGUI gui;
-    private JButton viewThreatBtn, battleBtn, reportsBtn, exitBtn, searchBattleBtn;
+    private JButton viewThreatBtn, battleBtn, reportsBtn, exitBtn, searchBattleBtn, saveGameBtn;
 
     public RightPanel(CivilizationsGUI gui) {
         this.gui = gui;
         setLayout(new GridBagLayout());
         setBackground(Color.BLACK);
         setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), "Acciones", TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), Color.WHITE));
-        setPreferredSize(new Dimension(240, 0));
+        setPreferredSize(new Dimension(260, 0));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 10, 5, 10);
@@ -66,12 +66,21 @@ public class RightPanel extends JPanel {
         add(Box.createVerticalStrut(10), gbc);
         gbc.gridy++;
 
+        // Botón buscar batalla
         searchBattleBtn = new JButton("Buscar Batalla");
         styleButton(searchBattleBtn);
         searchBattleBtn.addActionListener(e -> gui.forceEnemy());
         add(searchBattleBtn, gbc);
         gbc.gridy++;
 
+        // Botón guardar partida
+        saveGameBtn = new JButton("Guardar Partida");
+        styleButton(saveGameBtn);
+        saveGameBtn.addActionListener(e -> gui.saveGame());
+        add(saveGameBtn, gbc);
+        gbc.gridy++;
+
+        // Botones adicionales
         viewThreatBtn = new JButton("Ver Amenaza");
         battleBtn = new JButton("¡LIBAR BATALLA!");
         reportsBtn = new JButton("Informes");
@@ -83,6 +92,7 @@ public class RightPanel extends JPanel {
             gbc.gridy++;
         }
 
+        // Listeners
         viewThreatBtn.addActionListener(e -> gui.viewThreat());
         battleBtn.addActionListener(e -> gui.startBattle());
         reportsBtn.addActionListener(e -> gui.showBattleReports());
@@ -112,5 +122,7 @@ public class RightPanel extends JPanel {
         }
     }
 
-    public void refresh() { }
+    public void refresh() {
+        // No necesita actualización dinámica
+    }
 }

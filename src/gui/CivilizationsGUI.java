@@ -1,9 +1,11 @@
 package gui;
 
 import civilizations.*;
+import bbdd.SaveData;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -22,18 +24,24 @@ public class CivilizationsGUI extends JFrame implements Variables {
     private RightPanel rightPanel;
     private BottomPanel bottomPanel;
 
-    public CivilizationsGUI() {
-        civilization = new Civilization();
-        currentEnemyArmy = null;
-        enemyPending = false;
-        gameTimer = new Timer();
-        battleHistory = new ArrayList<>();
-
-        civilization.setFood(50000);
-        civilization.setWood(50000);
-        civilization.setIron(50000);
-        civilization.setMana(0);
-
+    // Constructor para nueva partida o carga desde StartScreen
+    public CivilizationsGUI(Civilization loadedCiv, List<Battle> loadedHistory) {
+        if (loadedCiv != null && loadedHistory != null) {
+            this.civilization = loadedCiv;
+            this.battleHistory = loadedHistory;
+            this.enemyPending = false;
+            this.currentEnemyArmy = null;
+        } else {
+            this.civilization = new Civilization();
+            this.battleHistory = new ArrayList<>();
+            this.civilization.setFood(50000);
+            this.civilization.setWood(50000);
+            this.civilization.setIron(50000);
+            this.civilization.setMana(0);
+            this.enemyPending = false;
+            this.currentEnemyArmy = null;
+        }
+        this.gameTimer = new Timer();
         initUI();
         startTimers();
         setTitle("Civilizations - Gestión de tu Imperio");
@@ -78,7 +86,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
                         appendLog("*** ¡Nueva amenaza enemiga! Usa 'Ver Amenaza' para detalles. ***\n");
                         refreshThreatIndicator(true);
                         refreshAll();
-                        startCountdown(); // Inicia cuenta atrás de 10 segundos
+                        startCountdown();
                     }
                 });
             }
@@ -150,7 +158,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
         return 0;
     }
 
-    // Botón para buscar batalla voluntariamente
     public void forceEnemy() {
         if (!enemyPending) {
             currentEnemyArmy = createEnemyArmy();
@@ -166,8 +173,8 @@ public class CivilizationsGUI extends JFrame implements Variables {
     }
 
     private void startCountdown() {
-        cancelCountdown(); // Asegurar que no haya otro corriendo
-        final int[] timeLeft = {10}; // 10 segundos
+        cancelCountdown();
+        final int[] timeLeft = {10};
         countdownTask = new TimerTask() {
             @Override
             public void run() {
@@ -175,7 +182,6 @@ public class CivilizationsGUI extends JFrame implements Variables {
                     if (enemyPending) {
                         middlePanel.setCountdown(timeLeft[0]);
                         if (timeLeft[0] <= 0) {
-                            // Cuenta atrás terminada, iniciar batalla
                             if (enemyPending && currentEnemyArmy != null) {
                                 startBattle();
                             }
@@ -215,8 +221,9 @@ public class CivilizationsGUI extends JFrame implements Variables {
     }
 
     public void startBattle() {
+        cancelCountdown();
         if (!enemyPending || currentEnemyArmy == null) {
-            JOptionPane.showMessageDialog(this, "No hay enemigo para batallar.", "Batalla", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "No hay enemigo para batallar. Espera a que llegue uno.", "Batalla", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         // Verificar si el jugador tiene unidades
@@ -228,12 +235,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
             JOptionPane.showMessageDialog(this, "No tienes ninguna unidad para combatir. Construye algunas primero.", "Sin ejército", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        // Resto del código...
-        cancelCountdown(); // Detener cuenta atrás si está activa
-        if (!enemyPending || currentEnemyArmy == null) {
-            JOptionPane.showMessageDialog(this, "No hay enemigo para batallar. Espera a que llegue uno.", "Batalla", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
+
         Battle battle = new Battle(civilization.getArmy(), currentEnemyArmy);
         battle.startBattle();
 
@@ -271,6 +273,18 @@ public class CivilizationsGUI extends JFrame implements Variables {
             return;
         }
         new BattleReportsFrame(battleHistory);
+    }
+
+    public void saveGame() {
+        SaveData data = new SaveData(civilization, battleHistory);
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("savegame.ser"))) {
+            oos.writeObject(data);
+            appendLog("Partida guardada correctamente.\n");
+            JOptionPane.showMessageDialog(this, "Partida guardada", "Guardado", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al guardar la partida", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public void refreshAll() {
@@ -315,7 +329,8 @@ public class CivilizationsGUI extends JFrame implements Variables {
         }
     }
 
+    // Punto de entrada: muestra la pantalla de inicio (StartScreen)
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new CivilizationsGUI());
+        SwingUtilities.invokeLater(() -> new StartScreen());
     }
 }

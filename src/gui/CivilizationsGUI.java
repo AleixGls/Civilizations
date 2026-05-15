@@ -5,8 +5,10 @@ import civilizations.*;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
 
 public class CivilizationsGUI extends JFrame implements Variables {
     private Civilization civilization;
@@ -17,6 +19,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
     private MiddlePanel middlePanel;
     private RightPanel rightPanel;
     private BottomPanel bottomPanel;
+    private List<Battle> battleHistory = new ArrayList<>();
 
     public CivilizationsGUI() {
         civilization = new Civilization();
@@ -33,7 +36,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
         initUI();
         startTimers();
         setTitle("Civilizations - Gestión de tu Imperio");
-        setSize(1200, 900);
+        setSize(1500, 1000);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -160,6 +163,7 @@ public class CivilizationsGUI extends JFrame implements Variables {
         }
         Battle battle = new Battle(civilization.getArmy(), currentEnemyArmy);
         battle.startBattle();
+        battleHistory.add(battle);
         civilization.setBattles(civilization.getBattles() + 1);
         if (battle.isCivilizationWinner()) {
             int[] waste = battle.getWaste();
@@ -178,7 +182,11 @@ public class CivilizationsGUI extends JFrame implements Variables {
     }
 
     public void showBattleReports() {
-        JOptionPane.showMessageDialog(this, "Funcionalidad de informes de batalla pendiente.\nCada batalla se guarda en el historial.", "Informes", JOptionPane.INFORMATION_MESSAGE);
+        if (battleHistory.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay batallas registradas.", "Informes", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        new BattleReportsFrame(battleHistory);
     }
 
     public void refreshAll() {

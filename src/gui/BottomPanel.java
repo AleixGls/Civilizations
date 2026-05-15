@@ -24,18 +24,38 @@ public class BottomPanel extends JPanel {
             unitButtons[i].setBackground(Color.DARK_GRAY);
             unitButtons[i].setForeground(Color.WHITE);
             unitButtons[i].setFocusPainted(false);
+            // Para dar más altura
+            unitButtons[i].setPreferredSize(new Dimension(140, 160));
 
-            JLabel iconLabel = new JLabel(gui.loadIcon(unitIcons[i], 50, 50));
+            JLabel iconLabel = new JLabel(gui.loadIcon(unitIcons[i], 60, 60));
             JLabel textLabel = new JLabel(unitNames[type] + " (0)");
             textLabel.setForeground(Color.WHITE);
             textLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-            JPanel costPanel = new JPanel(new FlowLayout());
+            // Panel de costes con FlowLayout que ajusta automáticamente
+            JPanel costPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 2));
             costPanel.setBackground(Color.DARK_GRAY);
-            int metalCost = Variables.IRON_COST_UNITS[type];
+            
+            // Coste de comida
+            int foodCost = Variables.FOOD_COST_UNITS[type];
+            if (foodCost > 0) {
+                costPanel.add(new JLabel(gui.loadIcon("food.png", 16, 16)));
+                costPanel.add(new JLabel(String.valueOf(foodCost)));
+            }
+            // Coste de madera
+            int woodCost = Variables.WOOD_COST_UNITS[type];
+            if (woodCost > 0) {
+                costPanel.add(new JLabel(gui.loadIcon("wood.png", 16, 16)));
+                costPanel.add(new JLabel(String.valueOf(woodCost)));
+            }
+            // Coste de hierro
+            int ironCost = Variables.IRON_COST_UNITS[type];
+            if (ironCost > 0) {
+                costPanel.add(new JLabel(gui.loadIcon("iron.png", 16, 16)));
+                costPanel.add(new JLabel(String.valueOf(ironCost)));
+            }
+            // Coste de maná
             int manaCost = gui.getManaCost(type);
-            costPanel.add(new JLabel(gui.loadIcon("iron.png", 16, 16)));
-            costPanel.add(new JLabel(String.valueOf(metalCost)));
             if (manaCost > 0) {
                 costPanel.add(new JLabel(gui.loadIcon("mana.png", 16, 16)));
                 costPanel.add(new JLabel(String.valueOf(manaCost)));
@@ -73,7 +93,7 @@ public class BottomPanel extends JPanel {
                 JOptionPane.showMessageDialog(gui, "Cantidad inválida", "Error", JOptionPane.ERROR_MESSAGE);
             } catch (ResourceException | BuildingException e) {
                 JOptionPane.showMessageDialog(gui, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                gui.refreshAll();
+                gui.refreshAll(); // Actualiza por si se crearon algunas
             }
         }
     }
@@ -82,6 +102,7 @@ public class BottomPanel extends JPanel {
         Civilization civ = gui.getCivilization();
         for (int i = 0; i < unitButtons.length; i++) {
             JButton btn = unitButtons[i];
+            // El componente central es el JLabel con el nombre y cantidad
             JLabel textLabel = (JLabel) btn.getComponent(1);
             int count = civ.getArmy()[i].size();
             textLabel.setText(unitNames[i] + " (" + count + ")");

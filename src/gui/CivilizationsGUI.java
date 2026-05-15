@@ -163,8 +163,21 @@ public class CivilizationsGUI extends JFrame implements Variables {
         }
         Battle battle = new Battle(civilization.getArmy(), currentEnemyArmy);
         battle.startBattle();
-        battleHistory.add(battle);
+        
+        // Aplicar pérdidas de recursos (comida, madera, hierro) al jugador
+        int foodLoss = battle.getResourcesLooses()[0][0];
+        int woodLoss = battle.getResourcesLooses()[0][1];
+        int ironLoss = battle.getResourcesLooses()[0][2];
+        
+        civilization.setFood(Math.max(0, civilization.getFood() - foodLoss));
+        civilization.setWood(Math.max(0, civilization.getWood() - woodLoss));
+        civilization.setIron(Math.max(0, civilization.getIron() - ironLoss));
+        
+        appendLog(String.format("Pérdidas tras la batalla: -%d comida, -%d madera, -%d hierro\n", foodLoss, woodLoss, ironLoss));
+        
         civilization.setBattles(civilization.getBattles() + 1);
+        battleHistory.add(battle);
+        
         if (battle.isCivilizationWinner()) {
             int[] waste = battle.getWaste();
             civilization.setWood(civilization.getWood() + waste[0]);

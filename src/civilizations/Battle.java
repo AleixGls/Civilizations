@@ -257,5 +257,8 @@ public class Battle implements Variables {
     }
 
     public int[] getWaste() { return wasteWoodIron; }
-    public boolean isCivilizationWinner() { return resourcesLooses[0][3] < resourcesLooses[1][3]; }
+    public boolean isCivilizationWinner() { return resourcesLooses[0][3] < resourcesLooses[1][3];}
+    public int[][] getResourcesLooses() {
+        return resourcesLooses;
+    }
 }

@@ -1,9 +1,12 @@
-// ==================== Civilization.java ====================
 package civilizations;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Civilization implements Variables {
+public class Civilization implements Variables, Serializable {
+    private static final long serialVersionUID = 1L;
+    private static final int MAX_TECH_LEVEL = 10;
+
     private int technologyDefense;
     private int technologyAttack;
     private int wood;
@@ -16,7 +19,7 @@ public class Civilization implements Variables {
     private int smithy;
     private int carpentry;
     private int battles;
-    private ArrayList<MilitaryUnit>[] army; // Array de 9 ArrayLists
+    private ArrayList<MilitaryUnit>[] army;
 
     @SuppressWarnings("unchecked")
     public Civilization() {
@@ -38,7 +41,7 @@ public class Civilization implements Variables {
         }
     }
 
-    // Getters y setters básicos (omitidos por brevedad, se pueden generar)
+    // Getters y Setters
     public int getTechnologyDefense() { return technologyDefense; }
     public int getTechnologyAttack() { return technologyAttack; }
     public int getWood() { return wood; }
@@ -59,7 +62,7 @@ public class Civilization implements Variables {
     public void setMana(int mana) { this.mana = mana; }
     public void setBattles(int battles) { this.battles = battles; }
 
-    // Métodos para añadir edificios
+    // Edificios
     public void newFarm() throws ResourceException {
         if (food >= FOOD_COST_FARM && wood >= WOOD_COST_FARM && iron >= IRON_COST_FARM) {
             food -= FOOD_COST_FARM;
@@ -89,7 +92,7 @@ public class Civilization implements Variables {
             iron -= IRON_COST_SMITHY;
             smithy++;
         } else {
-            throw new ResourceException("Recursos insuficientes para construir Herreria");
+            throw new ResourceException("Recursos insuficientes para construir Herrería");
         }
     }
 
@@ -115,8 +118,11 @@ public class Civilization implements Variables {
         }
     }
 
-    // Mejoras de tecnología
+    // Tecnologías con límite
     public void upgradeTechnologyDefense() throws ResourceException {
+        if (technologyDefense >= MAX_TECH_LEVEL) {
+            throw new ResourceException("La tecnología de defensa ya está al nivel máximo (" + MAX_TECH_LEVEL + ").");
+        }
         int costIron = UPGRADE_BASE_DEFENSE_TECHNOLOGY_IRON_COST + (technologyDefense * UPGRADE_PLUS_DEFENSE_TECHNOLOGY_IRON_COST);
         int costWood = UPGRADE_BASE_DEFENSE_TECHNOLOGY_WOOD_COST + (technologyDefense * UPGRADE_PLUS_DEFENSE_TECHNOLOGY_WOOD_COST);
         if (iron >= costIron && wood >= costWood) {
@@ -129,6 +135,9 @@ public class Civilization implements Variables {
     }
 
     public void upgradeTechnologyAttack() throws ResourceException {
+        if (technologyAttack >= MAX_TECH_LEVEL) {
+            throw new ResourceException("La tecnología de ataque ya está al nivel máximo (" + MAX_TECH_LEVEL + ").");
+        }
         int costIron = UPGRADE_BASE_ATTACK_TECHNOLOGY_IRON_COST + (technologyAttack * UPGRADE_PLUS_ATTACK_TECHNOLOGY_IRON_COST);
         int costWood = UPGRADE_BASE_ATTACK_TECHNOLOGY_WOOD_COST + (technologyAttack * UPGRADE_PLUS_ATTACK_TECHNOLOGY_WOOD_COST);
         if (iron >= costIron && wood >= costWood) {
@@ -140,50 +149,44 @@ public class Civilization implements Variables {
         }
     }
 
-    // Métodos genéricos para añadir unidades
-    
+    // Método auxiliar para añadir unidades (con corrección de división por cero)
     private void addUnits(int type, int n, int foodCost, int woodCost, int ironCost, int manaCost,
-    		java.util.function.BiFunction<Integer, Integer, MilitaryUnit> creator) throws ResourceException, BuildingException {
-    	if (type == 7 && magicTower == 0) { // Magician
-    		throw new BuildingException("Se necesita al menos una Torre Mágica para crear magos");
-    	}
-    	if (type == 8 && church == 0) { // Priest
-    		throw new BuildingException("Se necesita al menos una Iglesia para crear sacerdotes");
-    	}
+                          java.util.function.BiFunction<Integer, Integer, MilitaryUnit> creator) throws ResourceException, BuildingException {
+        if (type == 7 && magicTower == 0) { // Magician
+            throw new BuildingException("Se necesita al menos una Torre Mágica para crear magos");
+        }
+        if (type == 8 && church == 0) { // Priest
+            throw new BuildingException("Se necesita al menos una Iglesia para crear sacerdotes");
+        }
 
-    	int possible = n;
-    	// Comida
-    	if (foodCost > 0) {
-    		int availableFood = food / foodCost;
-    		possible = Math.min(possible, availableFood);
-    	}
-    	// Madera
-    	if (woodCost > 0) {
-	int availableWood = wood / woodCost;
-	possible = Math.min(possible, availableWood);
-    	}
-    	// Hierro
-    	if (ironCost > 0) {
-    		int availableIron = iron / ironCost;
-    		possible = Math.min(possible, availableIron);
-    	}
-    	// Maná
-    	if (manaCost > 0) {
-    		int availableMana = mana / manaCost;
-    		possible = Math.min(possible, availableMana);
-    	}
+        int possible = n;
+        if (foodCost > 0) {
+            int available = food / foodCost;
+            possible = Math.min(possible, available);
+        }
+        if (woodCost > 0) {
+            int available = wood / woodCost;
+            possible = Math.min(possible, available);
+        }
+        if (ironCost > 0) {
+            int available = iron / ironCost;
+            possible = Math.min(possible, available);
+        }
+        if (manaCost > 0) {
+            int available = mana / manaCost;
+            possible = Math.min(possible, available);
+        }
 
-    	if (possible < n) {
-    		throw new ResourceException("Recursos insuficientes. Solo se puede añadir " + possible + " de " + n);
-    	}
-    	// Restar recursos
-    	if (foodCost > 0) food -= foodCost * possible;
-    	if (woodCost > 0) wood -= woodCost * possible;
-    	if (ironCost > 0) iron -= ironCost * possible;
-    	if (manaCost > 0) mana -= manaCost * possible;
-    	for (int i = 0; i < possible; i++) {
-    		army[type].add(creator.apply(technologyDefense, technologyAttack));
-    	}
+        if (possible < n) {
+            throw new ResourceException("Recursos insuficientes. Solo se pudieron añadir " + possible + " de " + n);
+        }
+        if (foodCost > 0) food -= foodCost * possible;
+        if (woodCost > 0) wood -= woodCost * possible;
+        if (ironCost > 0) iron -= ironCost * possible;
+        if (manaCost > 0) mana -= manaCost * possible;
+        for (int i = 0; i < possible; i++) {
+            army[type].add(creator.apply(technologyDefense, technologyAttack));
+        }
     }
 
     public void newSwordsman(int n) throws ResourceException, BuildingException {
@@ -221,20 +224,5 @@ public class Civilization implements Variables {
     public void newPriest(int n) throws ResourceException, BuildingException {
         addUnits(8, n, FOOD_COST_PRIEST, WOOD_COST_PRIEST, IRON_COST_PRIEST, MANA_COST_PRIEST,
                 (def, atk) -> new Priest(def, atk));
-    }
-
-    public void printStats() {
-        System.out.println("=== ESTADO DE LA CIVILIZACIÓN ===");
-        System.out.println("Tecnología defensa: " + technologyDefense);
-        System.out.println("Tecnología ataque: " + technologyAttack);
-        System.out.println("Recursos: Comida=" + food + " Madera=" + wood + " Hierro=" + iron + " Maná=" + mana);
-        System.out.println("Edificios: Granjas=" + farm + " Carpinterías=" + carpentry + " Herreries=" + smithy +
-                           " Torres Mágicas=" + magicTower + " Iglesias=" + church);
-        System.out.println("Ejército:");
-        String[] names = {"Espadachines","Lanceros","Ballestas","Cañones","Torres flecha","Catapultas","Lanzacohetes","Magos","Sacerdotes"};
-        for (int i=0; i<army.length; i++) {
-            System.out.println("  " + names[i] + ": " + army[i].size());
-        }
-        System.out.println("Batallas libradas: " + battles);
     }
 }

@@ -43,20 +43,18 @@ public class LeftPanel extends JPanel {
         gbc.gridy++;
         add(createSectionTitle("TECNOLOGÍA"), gbc);
         gbc.gridy++;
-        techDefLabel = new JLabel("Defensa: nivel 0");
+        techDefLabel = new JLabel("Defensa: nivel 0 / 10");
         techDefLabel.setForeground(Color.WHITE);
         add(techDefLabel, gbc);
         gbc.gridy++;
         upgradeDefenseBtn = new JButton("Mejorar Defensa");
         styleButton(upgradeDefenseBtn);
-        // Panel de coste para mejora defensa
         JPanel defCostPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
         defCostPanel.setBackground(Color.DARK_GRAY);
         defCostPanel.add(new JLabel(gui.loadIcon("iron.png", 16, 16)));
         upgradeDefenseCostLabel = new JLabel("0");
         upgradeDefenseCostLabel.setForeground(Color.WHITE);
         defCostPanel.add(upgradeDefenseCostLabel);
-        // Si hubiera coste de madera se añadiría aquí, pero en Variables es 0
         JPanel defButtonPanel = new JPanel(new BorderLayout());
         defButtonPanel.setBackground(Color.DARK_GRAY);
         defButtonPanel.add(upgradeDefenseBtn, BorderLayout.CENTER);
@@ -64,7 +62,7 @@ public class LeftPanel extends JPanel {
         add(defButtonPanel, gbc);
         gbc.gridy++;
 
-        techAtkLabel = new JLabel("Ataque: nivel 0");
+        techAtkLabel = new JLabel("Ataque: nivel 0 / 10");
         techAtkLabel.setForeground(Color.WHITE);
         add(techAtkLabel, gbc);
         gbc.gridy++;
@@ -159,17 +157,21 @@ public class LeftPanel extends JPanel {
         woodLabel.setText("Madera: " + civ.getWood());
         ironLabel.setText("Hierro: " + civ.getIron());
         manaLabel.setText("Maná: " + civ.getMana());
-        techDefLabel.setText("Defensa: nivel " + civ.getTechnologyDefense());
-        techAtkLabel.setText("Ataque: nivel " + civ.getTechnologyAttack());
+        techDefLabel.setText("Defensa: nivel " + civ.getTechnologyDefense() + " / 10");
+        techAtkLabel.setText("Ataque: nivel " + civ.getTechnologyAttack() + " / 10");
         farmLabel.setText("Granjas: " + civ.getFarm());
         carpLabel.setText("Carpinterías: " + civ.getCarpentry());
         smithLabel.setText("Herrerías: " + civ.getSmithy());
         towerLabel.setText("Torres Mágicas: " + civ.getMagicTower());
         churchLabel.setText("Iglesias: " + civ.getChurch());
 
-        // Actualizar costes de mejora
-        int defCost = Variables.UPGRADE_BASE_DEFENSE_TECHNOLOGY_IRON_COST + civ.getTechnologyDefense() * Variables.UPGRADE_PLUS_DEFENSE_TECHNOLOGY_IRON_COST;
-        int atkCost = Variables.UPGRADE_BASE_ATTACK_TECHNOLOGY_IRON_COST + civ.getTechnologyAttack() * Variables.UPGRADE_PLUS_ATTACK_TECHNOLOGY_IRON_COST;
+        int defLevel = civ.getTechnologyDefense();
+        int atkLevel = civ.getTechnologyAttack();
+        upgradeDefenseBtn.setEnabled(defLevel < 10);
+        upgradeAttackBtn.setEnabled(atkLevel < 10);
+
+        int defCost = Variables.UPGRADE_BASE_DEFENSE_TECHNOLOGY_IRON_COST + defLevel * Variables.UPGRADE_PLUS_DEFENSE_TECHNOLOGY_IRON_COST;
+        int atkCost = Variables.UPGRADE_BASE_ATTACK_TECHNOLOGY_IRON_COST + atkLevel * Variables.UPGRADE_PLUS_ATTACK_TECHNOLOGY_IRON_COST;
         upgradeDefenseCostLabel.setText(String.valueOf(defCost));
         upgradeAttackCostLabel.setText(String.valueOf(atkCost));
     }
